@@ -1,17 +1,12 @@
 import pandas as pd
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
-from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
-from LearningCurvePlot import plot_learning_curve
-from sklearn.model_selection import ShuffleSplit
-from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
-
+from sklearn.tree import DecisionTreeClassifier
 
 # Read Training set
 trainFile = open('C://Users//Randall//OneDrive//Documents//Education//Grad School//Datasets//adult_edit.csv')
@@ -62,12 +57,10 @@ K_test = selector.fit_transform(X_test, Y_test)
 # Create Classifier objects
 # sklean Decision tree uses CART
 # Finding the reference for that is left as an exercise for the reader
-clf_gini = DecisionTreeClassifier(criterion="gini", random_state=100, max_depth=11, min_samples_split=5,
-                                  max_features="auto")
-clf_entropy = DecisionTreeClassifier(criterion="entropy", random_state=100, max_depth=20, min_samples_split=100,
-                                  max_features="auto")
+clf_gini = DecisionTreeClassifier(criterion="gini", random_state=100, max_depth=10, min_samples_split=50)
+clf_entropy = DecisionTreeClassifier(criterion="entropy", random_state=100, max_depth=10, min_samples_split=50)
 clf_knn = KNeighborsClassifier(n_neighbors=20, n_jobs=4)
-clf_adaB = AdaBoostClassifier(base_estimator=clf_gini)
+clf_adaB = RandomForestClassifier(min_samples_split=50)
 clf_MLP = MLPClassifier(solver='lbfgs', alpha=1e-5, learning_rate="adaptive", random_state=1, max_iter=500)
 clf_SVC = SVC(kernel='linear', verbose=True, max_iter=-1)
 
@@ -102,7 +95,7 @@ print("SVC: ", accuracy_score(Y_test, clf_SVC.predict(K_test)) * 100)
 
 # K-Series
 clf_gini.fit(K_train, Y_train)
-print("Gini: ", accuracy_score(Y_test, clf_gini.predict(K_test)) * 100)
+print("\nGini: ", accuracy_score(Y_test, clf_gini.predict(K_test)) * 100)
 
 clf_entropy.fit(K_train, Y_train)
 print("Entropy: ", accuracy_score(Y_test, clf_entropy.predict(K_test)) * 100)
