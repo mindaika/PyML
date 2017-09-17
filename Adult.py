@@ -1,12 +1,16 @@
+import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import ShuffleSplit
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
+
+from LearningCurvePlot import plot_learning_curve
 
 # Read Training set
 trainFile = open('C://Users//Randall//OneDrive//Documents//Education//Grad School//Datasets//adult_edit.csv')
@@ -62,8 +66,15 @@ clf_entropy = DecisionTreeClassifier(criterion="entropy", random_state=100, max_
 clf_knn = KNeighborsClassifier(n_neighbors=20, n_jobs=4)
 clf_adaB = RandomForestClassifier(min_samples_split=50)
 clf_MLP = MLPClassifier(solver='lbfgs', alpha=1e-5, learning_rate="adaptive", random_state=1, max_iter=500)
-clf_SVC = SVC(kernel='linear', verbose=True, max_iter=-1)
+clf_SVC = SVC(kernel='linear', verbose=False, max_iter=-1)
+clf_dict = {'GINI in a bottle': clf_gini,
+            'Entropy Tree': clf_entropy,
+            'k-Nearest Neighbors': clf_knn,
+            'Ada Boosting': clf_adaB,
+            'Multilayer Perceptron/ANN': clf_MLP,
+            'SVC. The S stands for Slow.': clf_SVC}
 
+# Testing for best parameters
 # for tester in range(100, 101):
 #     clf_MLP = MLPClassifier(solver='sgd', alpha=1e-5, hidden_layer_sizes=(9, 5), learning_rate="adaptive", random_state=1, max_iter=500)
 #     clf_MLP.fit(X_train, Y_train)
@@ -92,41 +103,30 @@ scaler = StandardScaler()
 clf_SVC.fit(scaler.fit_transform(K_train), Y_train)
 print("SVC: ", accuracy_score(Y_test, clf_SVC.predict(K_test)) * 100)
 
+# Plotter / Data Viz
+for key, value in clf_dict.items():
+    cv = ShuffleSplit(n_splits=5, test_size=0.2, random_state=0)
+    plt = plot_learning_curve(value, key, X_train, Y_train, ylim=(0.0, 1.01), cv=cv, n_jobs=1)
+plt.show()
 
-# K-Series
-clf_gini.fit(K_train, Y_train)
-print("\nGini: ", accuracy_score(Y_test, clf_gini.predict(K_test)) * 100)
-
-clf_entropy.fit(K_train, Y_train)
-print("Entropy: ", accuracy_score(Y_test, clf_entropy.predict(K_test)) * 100)
-
-clf_adaB.fit(K_train, Y_train)
-print("AdaBoost: ", accuracy_score(Y_test, clf_adaB.predict(K_test)) * 100)
-
-clf_knn.fit(K_train, Y_train)
-print("kNN: ", accuracy_score(Y_test, clf_knn.predict(K_test)) * 100)
-
-clf_MLP.fit(K_train, Y_train)
-print("MLP: ", accuracy_score(Y_test, clf_MLP.predict(K_test)) * 100)
-
-clf_SVC.fit(K_train, Y_train)
-print("SVC: ", accuracy_score(Y_test, clf_SVC.predict(K_test)) * 100)
-
-
-# title = "Learning Curves (Decision Tree)"
-# Cross validation with 100 iterations to get smoother mean test and train
-# score curves, each time with 20% data randomly selected as a validation set.
-# cv = ShuffleSplit(n_splits=20, test_size=0.2, random_state=0)
-
-# plt = plot_learning_curve(clf_gini, title, K_train, Y_train, ylim=(0.7, 1.01), cv=cv, n_jobs=1)
-
-# title = "Learning Curves (SVM, RBF kernel, $\gamma=0.001$)"
-# SVC is more expensive so we do a lower number of CV iterations:
-# cv = ShuffleSplit(n_splits=10, test_size=0.2, random_state=0)
-# estimator = SVC(gamma=0.001)
-# plt = plot_learning_curve(estimator, title, X, Y, (0.7, 1.01), cv=cv, n_jobs=1)
-
-# plt.show()
+# # K-Series
+# clf_gini.fit(K_train, Y_train)
+# print("\nGini: ", accuracy_score(Y_test, clf_gini.predict(K_test)) * 100)
+#
+# clf_entropy.fit(K_train, Y_train)
+# print("Entropy: ", accuracy_score(Y_test, clf_entropy.predict(K_test)) * 100)
+#
+# clf_adaB.fit(K_train, Y_train)
+# print("AdaBoost: ", accuracy_score(Y_test, clf_adaB.predict(K_test)) * 100)
+#
+# clf_knn.fit(K_train, Y_train)
+# print("kNN: ", accuracy_score(Y_test, clf_knn.predict(K_test)) * 100)
+#
+# clf_MLP.fit(K_train, Y_train)
+# print("MLP: ", accuracy_score(Y_test, clf_MLP.predict(K_test)) * 100)
+#
+# clf_SVC.fit(K_train, Y_train)
+# print("SVC: ", accuracy_score(Y_test, clf_SVC.predict(K_test)) * 100)
 
 
 
