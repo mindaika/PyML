@@ -1,4 +1,5 @@
-import matplotlib.pyplot as plt
+import time
+
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -6,7 +7,7 @@ from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import LabelEncoder
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
@@ -40,11 +41,6 @@ Y_train = train.loc[:, 'ClassDist']
 X_test = test.drop('ClassDist', axis=1)
 Y_test = test.loc[:, 'ClassDist']
 
-# # # Feature Selection Comparison
-# # selector = SelectKBest(chi2, k=2)
-# # K_train = selector.fit_transform(X_train, Y_train)
-# # K_test = selector.fit_transform(X_test, Y_test)
-#
 # Create Classifier objects
 # sklean Decision tree uses CART
 # Finding the reference for that is left as an exercise for the reader
@@ -69,12 +65,12 @@ clf_MLP = MLPClassifier(solver='lbfgs',
                         random_state=1,
                         max_iter=500)
 clf_SVC = SVC(C=68, kernel='rbf')
-clf_dict = {'GINI in a bottle': clf_gini,
-            'Entropy Tree': clf_entropy,
-            'k-Nearest Neighbors': clf_knn,
-            'Ada Boosting': clf_adaB,
-            'Multilayer Perceptron/ANN': clf_MLP,
-            'SVC. The S stands for Slow.': clf_SVC}
+clf_dict = {'GINI_DTree': clf_gini,
+            'Entropy_Tree': clf_entropy,
+            'k_NN': clf_knn,
+            'AdaBoosting': clf_adaB,
+            'Perceptron_ANN': clf_MLP,
+            'SVC': clf_SVC}
 
 # Testing for best parameters
 # for tester in range(50, 70):
@@ -91,35 +87,24 @@ clf_dict = {'GINI in a bottle': clf_gini,
 # print(clf.best_score_, clf.best_params_)
 
 # Fit Classifiers to Data and Print results
-# X-Series
 print("\n--Yeast Predictions--")
 
-clf_gini.fit(X_train, Y_train)
-print("Gini: \t\t", "%.2f" % (accuracy_score(Y_test, clf_gini.predict(X_test)) * 100))
-
-clf_entropy.fit(X_train, Y_train)
-print("Entropy: \t", "%.2f" % (accuracy_score(Y_test, clf_entropy.predict(X_test)) * 100))
-
-clf_adaB.fit(X_train, Y_train)
-print("AdaBoost: \t", "%.2f" % (accuracy_score(Y_test, clf_adaB.predict(X_test)) * 100))
-
-clf_knn.fit(X_train, Y_train)
-print("kNN: \t\t", "%.2f" % (accuracy_score(Y_test, clf_knn.predict(X_test)) * 100))
-
-clf_MLP.fit(X_train, Y_train)
-print("MLP: \t\t", "%.2f" % (accuracy_score(Y_test, clf_MLP.predict(X_test)) * 100))
-
-# Scaling is terrible on this dataset. Disabling scaling moves
-# SVC from the worst performer to the best.
-scaler = StandardScaler()
-clf_SVC.fit(X_train, Y_train)
-print("SVC: \t\t", "%.2f" % (accuracy_score(Y_test, clf_SVC.predict(X_test)) * 100))
-
-# # Plotter
+# Results Header
+template = "{0:20}{1:15}{2:15}"
+print(template.format("Classifier", "Accuracy(%)", "Runtime(s)"))
 for key, value in clf_dict.items():
+    start = time.time()
+    value.fit(X_train, Y_train)
+    end = time.time()
+    print(template.format(key, ("%.2f" % (accuracy_score(Y_test, value.predict(X_test)) * 100)), "%.2f" % (end - start)))
+
+# Plotter
+for key, value in clf_dict.items():
+    # Cross validation with n_splits iterations to get smoother mean test and train
+    # score curves, each time with test_size data randomly selected as a validation set.
     cv = ShuffleSplit(n_splits=5, test_size=0.2, random_state=0)
-    plt = plot_learning_curve(value, key, X_train, Y_train, ylim=(0.0, 1.01), cv=cv, n_jobs=1)
-plt.show()
+    plt = plot_learning_curve(value, 'Yeast-' + key, X_train, Y_train, ylim=(0.0, 1.01), cv=cv, n_jobs=1)
+    plt.savefig('Yeast_' + key)
 
 # # # K-Series
 # # clf_gini.fit(K_train, Y_train)
@@ -143,8 +128,7 @@ plt.show()
 #
 # # Data Visualization
 # # title = "Learning Curves (Decision Tree)"
-# # # Cross validation with 100 iterations to get smoother mean test and train
-# # # score curves, each time with 20% data randomly selected as a validation set.
+
 # # cv = ShuffleSplit(n_splits=100, test_size=0.2, random_state=0)
 # # plt = plot_learning_curve(clf_gini, title, X_train, Y_train, ylim=(0.7, 1.01), cv=cv, n_jobs=1)
 #
