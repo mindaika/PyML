@@ -1,5 +1,5 @@
 import time
-
+import os
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -10,11 +10,10 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-
 from LearningCurvePlot import plot_learning_curve
 
 # Read Yeast
-trainFile = open('C://Users//Randall//OneDrive//Documents//Education//Grad School//Datasets//yeast.csv')
+trainFile = open(os.environ['USERPROFILE'] + '//OneDrive//Documents//Education//Grad School//Datasets//yeast.csv')
 yeast = pd.read_csv(trainFile)
 print("Training dataset shape: ", yeast.shape)
 
@@ -102,8 +101,9 @@ for key, value in clf_dict.items():
 for key, value in clf_dict.items():
     # Cross validation with n_splits iterations to get smoother mean test and train
     # score curves, each time with test_size data randomly selected as a validation set.
-    cv = ShuffleSplit(n_splits=5, test_size=0.2, random_state=0)
+    cv = ShuffleSplit(n_splits=10, test_size=0.1, random_state=0)
     plt = plot_learning_curve(value, 'Yeast-' + key, X_train, Y_train, ylim=(0.0, 1.01), cv=cv, n_jobs=1)
+    print(key, "figure complete")
     plt.savefig('Yeast_' + key)
 
 # # # K-Series
