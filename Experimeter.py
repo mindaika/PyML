@@ -90,11 +90,11 @@ adult_MLP = MLPClassifier(solver='lbfgs',
                           learning_rate="adaptive", 
                           random_state=1, 
                           max_iter=500)
-adult_SVC = SVC(C=60, 
-                kernel='linear', 
+adult_SVC = SVC(C=1.0,
+                kernel='rbf',
                 verbose=False, 
                 max_iter=-1, 
-                cache_size=7000)
+                cache_size=1000)
 yeast_gini = DecisionTreeClassifier(criterion="gini",
                                   random_state=100,
                                   max_depth=4,
@@ -115,7 +115,11 @@ yeast_MLP = MLPClassifier(solver='lbfgs',
                         learning_rate="adaptive",
                         random_state=1,
                         max_iter=500)
-yeast_SVC = SVC(C=68, kernel='rbf')
+yeast_SVC = SVC(C=1.0,
+                kernel='rbf',
+                verbose=False,
+                max_iter=-1,
+                cache_size=1000)
 
 clf_dict = {'Adult_gini DTree': adult_gini,
             'Adult_entropy_Tree': adult_entropy,
@@ -143,7 +147,7 @@ for key, value in clf_dict.items():
         Y = Y_yeast
 
     if key[-3:] == 'SVC':
-        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, train_size=200, random_state=0)
+        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, train_size=1200, random_state=0)
         X_train = scale(X_train)
         X_test = scale(X_test)
     else:
@@ -166,11 +170,24 @@ for key, value in clf_dict.items():
 
     if key[-3:] == 'SVC':
         X = scale(X)
-        X = scale(X)
-        cv = ShuffleSplit(n_splits=5, train_size=500, random_state=0)
+        cv = ShuffleSplit(n_splits=100, train_size=1200, random_state=0)
     else:
-        cv = ShuffleSplit(n_splits=10, test_size=0.1, random_state=0)
+        cv = ShuffleSplit(n_splits=100, test_size=0.1, random_state=0)
 
     plt = plot_learning_curve(value, key, X, Y, ylim=(0.0, 1.01), cv=cv, n_jobs=1)
     print(key, "figure complete")
     plt.savefig(key)
+
+
+def parameter_search(estimator, test_parameter, range, scalar=1, *args):
+    for i in range:
+        print(args[1])
+        estimator.test_parameter = (i * scalar)
+
+        template = "{0:25}{1:15}{2:15}{3:3}"
+        print(template.format("\nClassifier", "Accuracy(%)", "Runtime(s)", "Test Value"))
+        start = time.time()
+        value.fit(X_train, Y_train)
+        end = time.time()
+        print(template.format(key, ("%.2f" % (accuracy_score(Y_test, value.predict(X_test)) * 100)),
+                              "%.2f" % (end - start)), (i * scalar))
