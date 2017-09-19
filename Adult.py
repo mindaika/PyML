@@ -1,17 +1,19 @@
-import time
 import os
+import time
+
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import train_test_split
-from LearningCurvePlot import plot_learning_curve
+
+from HelperFunctions import plot_learning_curve
 
 # Read Training set
 trainFile = open(os.environ['USERPROFILE'] + '//OneDrive//Documents//Education//Grad School//Datasets//adult_edit.csv')

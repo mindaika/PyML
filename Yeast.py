@@ -1,5 +1,6 @@
-import time
 import os
+import time
+
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -10,7 +11,8 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-from LearningCurvePlot import plot_learning_curve
+
+from HelperFunctions import plot_learning_curve
 
 # Read Yeast
 trainFile = open(os.environ['USERPROFILE'] + '//OneDrive//Documents//Education//Grad School//Datasets//yeast.csv')
