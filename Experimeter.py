@@ -20,14 +20,14 @@ def parameter_search():
     print(template.format("\nClassifier", "Accuracy(%)", "Runtime(s)", "i * scalar", "Predict(s)"))
 
     for i in range(1, 10):
-        scalar = 1
+        scalar = 10
 
         test_value = (i * scalar)
         # float(str(i / 10))
-        X_train, X_test, Y_train, Y_test = train_test_split(X_adult, Y_adult, train_size=100, random_state=0)
+        X_train, X_test, Y_train, Y_test = train_test_split(X_yeast, Y_yeast, train_size=0.65, random_state=0)
 
-        _estimator = SVC(kernel='sigmoid')
-        # _estimator.gamma = (i * scalar)
+        _estimator = SVC(kernel='linear')
+        _estimator.C = (i * scalar)
 
         start = time.time()
         _estimator.fit(X_train, Y_train)
@@ -64,7 +64,7 @@ print("Adult test dataset shape: ", adult_test.shape)
 # Read Yeast
 yeast_trainFile = open(os.environ['USERPROFILE'] + '//OneDrive//Documents//Education//Grad School//Datasets//yeast.csv')
 yeast = pd.read_csv(yeast_trainFile)
-print("Yeast dataset shape: ", yeast.shape)
+print("Yeast dataset shape: ", yeast.columns.values)
 
 # -- Adult Pre-processing --
 # Concatenate Adult sets
@@ -128,28 +128,22 @@ adult_SVC = SVC(C=1.0,
                 max_iter=-1,
                 cache_size=1000)
 yeast_gini = DecisionTreeClassifier(criterion="gini",
-                                    random_state=100,
-                                    max_depth=4,
-                                    min_samples_split=29,
-                                    min_samples_leaf=13)
+                                    max_depth=9,
+                                    min_samples_leaf=10,
+                                    min_samples_split=50)
 yeast_entropy = DecisionTreeClassifier(criterion="entropy",
-                                       random_state=100,
                                        max_depth=10,
-                                       min_samples_split=2,
-                                       min_samples_leaf=16)
-yeast_knn = KNeighborsClassifier(n_neighbors=5,
+                                       min_samples_split=30,
+                                       min_samples_leaf=30)
+yeast_knn = KNeighborsClassifier(n_neighbors=18,
                                  n_jobs=4)
-yeast_RFC = RandomForestClassifier(n_estimators=16,
-                                   min_samples_split=31,
-                                   min_samples_leaf=9,
-                                   n_jobs=4)
-yeast_MLP = MLPClassifier(solver='lbfgs',
-                          alpha=1e-5,
-                          learning_rate="adaptive",
-                          random_state=1,
-                          max_iter=500)
-yeast_SVC = SVC(C=1.0,
-                kernel='rbf',
+yeast_RFC = RandomForestClassifier(max_depth=8,
+                                   min_samples_split=50,
+                                   min_samples_leaf=10,
+                                   max_leaf_nodes=100)
+yeast_MLP = MLPClassifier(max_iter=4000)
+yeast_SVC = SVC(C=10,
+                kernel='linear',
                 verbose=False,
                 max_iter=-1,
                 cache_size=1000)
@@ -174,7 +168,7 @@ clf_dict = {'Adult_gini DTree': adult_gini,
 # -- Classifier fitting --
 # Results Header
 template = "{0:25}{1:15}{2:15}{3:15}"
-print(template.format("\nClassifier", "Accuracy(%)", "Runtime(s)", "Predict(s)"))
+print(template.format("\nClassifier", "Accuracy (%)", "Learning Time (s)", "Predict Time (s)"))
 for key, value in clf_dict.items():
     if key[0:5] == 'Adult':
         X = X_adult
@@ -214,9 +208,9 @@ for key, value in clf_dict.items():
 
     if key[-3:] == 'SVC':
         X = scale(X)
-        cv = ShuffleSplit(n_splits=5, train_size=200)
+        cv = ShuffleSplit(n_splits=20, train_size=200)
     else:
-        cv = ShuffleSplit(n_splits=5, test_size=0.45)
+        cv = ShuffleSplit(n_splits=100, test_size=0.45)
 
     start_plot = time.time()
     plt = plot_learning_curve(value, key, X, Y, ylim=(0.0, 1.01), cv=cv, n_jobs=1)
