@@ -3,6 +3,7 @@ import time
 import csv
 
 import pandas as pd
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import ShuffleSplit
@@ -250,16 +251,16 @@ for key, value in clf_dict.items():
         X = X_yeast
         Y = Y_yeast
 
-    if key[-3:] == 'SVC':
+    if (key[-3:] == 'SVC') or (key[-3:] == 'ANN'):
         X = scale(X)
-        cv = ShuffleSplit(n_splits=5, train_size=200, random_state=13)
-    else:
-        cv = ShuffleSplit(n_splits=5, test_size=0.45, random_state=13)
-        if key[-3:] == 'ANN':
-            X = scale(X)
+
+    cv = ShuffleSplit(n_splits=10, random_state=13)
 
     start_plot = time.time()
-    plt = plot_learning_curve(value, key, X, Y, ylim=(0.0, 1.01), cv=cv, n_jobs=1)
+    if key[-3:] == 'SVC':
+        plt = plot_learning_curve(value, key, X, Y, ylim=(0.2, 1.01), cv=cv, train_sizes=np.linspace(.01, 0.15, 10), n_jobs=1)
+    else:
+        plt = plot_learning_curve(value, key, X, Y, ylim=(0.2, 1.01), cv=cv, n_jobs=1)
     end_plot = time.time()
 
     plt.savefig('.//results//' + key)
