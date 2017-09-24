@@ -1,9 +1,9 @@
+import csv
 import os
 import time
-import csv
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import ShuffleSplit
@@ -97,42 +97,32 @@ Y_adult = adult.loc[:, 'income_bin']
 X_yeast = yeast.drop('ClassDist', axis=1)
 Y_yeast = yeast.loc[:, 'ClassDist']
 
-# -- Feature Selection --
-# Feature Selection Comparison
-# selector = SelectKBest(chi2, k=20)
-# X_train = selector.fit_transform(X_train, Y_train)
-# X_test = selector.fit_transform(X_test, Y_test)
-
-
 # -- Classifier setup --
 default_adult_DTree = DecisionTreeClassifier(random_state=13)
 default_adult_knn = KNeighborsClassifier()
-default_adult_adaB = RandomForestClassifier(random_state=13)
-default_adult_MLP = MLPClassifier(random_state=13)
+default_adult_RFC = RandomForestClassifier(random_state=13)
+default_adult_MLP = MLPClassifier(max_iter=5000,
+                                  random_state=13)
 default_adult_SVC = SVC(random_state=13)
 default_yeast_DTree = DecisionTreeClassifier(random_state=13)
 default_yeast_knn = KNeighborsClassifier()
 default_yeast_RFC = RandomForestClassifier(random_state=13)
-default_yeast_MLP = MLPClassifier( random_state=13)
+default_yeast_MLP = MLPClassifier(max_iter=5000,
+                                  random_state=13)
 default_yeast_SVC = SVC(random_state=13)
 
-adult_gini = DecisionTreeClassifier(criterion="gini",
-                                    max_depth=60,
-                                    min_samples_leaf=50,
-                                    min_samples_split=500,
-                                    random_state=13)
-adult_entropy = DecisionTreeClassifier(criterion="entropy",
-                                       max_depth=10,
-                                       min_samples_leaf=50,
-                                       min_samples_split=500,
-                                       random_state=13)
+adult_DTree = DecisionTreeClassifier(criterion="entropy",
+                                     max_depth=10,
+                                     min_samples_leaf=50,
+                                     min_samples_split=500,
+                                     random_state=13)
 adult_knn = KNeighborsClassifier(n_neighbors=30,
                                  n_jobs=4)
-adult_adaB = RandomForestClassifier(max_depth=20,
-                                    min_samples_split=50,
-                                    min_samples_leaf=4,
-                                    max_leaf_nodes=500,
-                                    random_state=13)
+adult_RFC = RandomForestClassifier(max_depth=20,
+                                   min_samples_split=50,
+                                   min_samples_leaf=4,
+                                   max_leaf_nodes=500,
+                                   random_state=13)
 adult_MLP = MLPClassifier(hidden_layer_sizes=(3, 2, 4),
                           solver='sgd',
                           max_iter=5000,
@@ -143,11 +133,6 @@ adult_SVC = SVC(C=1.0,
                 max_iter=-1,
                 cache_size=1000,
                 random_state=13)
-yeast_gini = DecisionTreeClassifier(criterion="gini",
-                                    max_depth=9,
-                                    min_samples_leaf=10,
-                                    min_samples_split=50,
-                                    random_state=13)
 yeast_entropy = DecisionTreeClassifier(criterion="entropy",
                                        max_depth=10,
                                        min_samples_split=30,
@@ -169,9 +154,9 @@ yeast_SVC = SVC(C=1.0,
                 cache_size=1000,
                 random_state=13)
 
-clf_dict = {'Adult default DTree': default_adult_DTree,
+clf_dict = {'Adult default Decision Tree': default_adult_DTree,
             'Adult default k-NN': default_adult_knn,
-            'Adult default RandomForest': default_adult_adaB,
+            'Adult default RandomForest': default_adult_RFC,
             'Adult default Perceptron_ANN': default_adult_MLP,
             'Adult default SVC': default_adult_SVC,
             'Yeast default DTree': default_yeast_DTree,
@@ -179,14 +164,12 @@ clf_dict = {'Adult default DTree': default_adult_DTree,
             'Yeast default RandomForest': default_yeast_RFC,
             'Yeast default Perceptron_ANN': default_yeast_MLP,
             'Yeast default SVC': default_yeast_SVC,
-            'Adult gini DTree': adult_gini,
-            'Adult entropy_Tree': adult_entropy,
+            'Adult Decision Tree': adult_DTree,
             'Adult k-NN': adult_knn,
-            'Adult RandomForest': adult_adaB,
+            'Adult RandomForest': adult_RFC,
             'Adult Perceptron_ANN': adult_MLP,
             'Adult SVC': adult_SVC,
-            'Yeast gini DTree': yeast_gini,
-            'Yeast entropy Tree': yeast_entropy,
+            'Yeast Decision Tree': yeast_entropy,
             'Yeast k-NN': yeast_knn,
             'Yeast RandomForest': yeast_RFC,
             'Yeast Perceptron_ANN': yeast_MLP,
@@ -214,14 +197,18 @@ for key, value in clf_dict.items():
         Y = Y_yeast
 
     if key[-3:] == 'SVC':
+        X = scale(X)
         X_train, X_test, Y_train, Y_test = train_test_split(X, Y, train_size=200, random_state=13)
-        X_train = scale(X_train)
-        X_test = scale(X_test)
     else:
-        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.45, random_state=13)
         if key[-3:] == 'ANN':
-            X_train = scale(X_train)
-            X_test = scale(X_test)
+            X = scale(X)
+        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.45, random_state=13)
+
+    # -- Feature Selection --
+    # Feature Selection Comparison
+    # selector = SelectKBest(chi2, k=100)
+    # X_train = selector.fit_transform(X_train, Y_train)
+    # X_test = selector.fit_transform(X_test, Y_test)
 
     start = time.time()
     value.fit(X_train, Y_train)
@@ -240,22 +227,9 @@ for key, value in clf_dict.items():
     # Write results file
     csv_writer.writerow([key, prediction, (end - start), (end_predict - start_predict)])
 
-output_file.close()
-
-# -- Results Plotting --
-for key, value in clf_dict.items():
-    if key[0:5] == 'Adult':
-        X = X_adult
-        Y = Y_adult
-    else:
-        X = X_yeast
-        Y = Y_yeast
-
-    if (key[-3:] == 'SVC') or (key[-3:] == 'ANN'):
-        X = scale(X)
-
     cv = ShuffleSplit(n_splits=10, random_state=13)
 
+    # -- Results Plotting --
     start_plot = time.time()
     if key[-3:] == 'SVC':
         plt = plot_learning_curve(value, key, X, Y, ylim=(0.2, 1.01), cv=cv, train_sizes=np.linspace(.01, 0.15, 10), n_jobs=1)
@@ -263,6 +237,8 @@ for key, value in clf_dict.items():
         plt = plot_learning_curve(value, key, X, Y, ylim=(0.2, 1.01), cv=cv, n_jobs=1)
     end_plot = time.time()
 
-    plt.savefig('.//results//' + key)
+    savefile = './/results//' + key
+    plt.savefig(savefile)
     print(key, "figure complete. Plot time: " + "%.2f" % (end_plot - start_plot))
-    plt.close(key)
+    plt.close()
+output_file.close()
